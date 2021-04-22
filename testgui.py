@@ -20,7 +20,7 @@ import smbus
 
 SCNTYPE = 1 # 1= OLED #2 = TERMINAL MODE BETA TESTS VERSION
 
-bus = smbus.SMBus(2)  # 0 = /dev/i2c-0 (port I2C0), 1 = /dev/i2c-1 (port I2C1)
+bus = smbus.SMBus(1)  # 0 = /dev/i2c-0 (port I2C0), 1 = /dev/i2c-1 (port I2C1)
 
 GPIO.setwarnings(False)
 
@@ -107,7 +107,7 @@ def DisplayText(l1,l2,l3,l4,l5,l6,l7):
             print(l6)
             print(l7)
 def shell(cmd):
-    return(subprocess.check_output(cmd, shell = True ))
+    return(subprocess.run(cmd, shell = True, capture_output=True))
 def switch_menu(argument):
     switcher = {
     0: "_  FLASHER",
@@ -118,7 +118,7 @@ def switch_menu(argument):
         5: "_TEMPLATES FEATURES",
         6: "_INFOSEC TOOLS",
         7: "_BOOT TWRP",
-        8: "_EPIC",
+        8: "_Change Slot",
         9: "_HOST OS detection",
         10: "_Display OFF",
         11: "_Keys Test",
@@ -201,8 +201,7 @@ def SreenOFF():
         device.show()
 
 def BootTWRP():
-    shell("fastboot boot twrp.img")
-
+    shell("fastboot boot images/twrp.img")
 
 def KeyTest():
     if SCNTYPE == 1:
@@ -248,6 +247,14 @@ def KeyTest():
                 else: # button is pressed:
                         draw.ellipse((70,40,90,60), outline=255, fill=1) #A button filled
 
+def changeSlot():
+    slot = shell("fastboot getvar current-slot").stderr.decode('utf-8')[14]
+    print(slot)
+    if (slot == 'a'):
+        shell("fastboot --set-active=b")
+    elif (slot == 'b'):
+        shell("fastboot --set-active=a")
+
 #init vars 
 curseur = 1
 page=0  
@@ -282,16 +289,13 @@ while 1:
             curseur = 1
     #-----------
     if selection == 1:
-
             # Fastboot menu
             if page == 7:
-
                 #Fastboot Boot TWRP
                 if curseur == 1:
                     BootTWRP()
-
                 if curseur == 2:
-                    brightness = OLEDContrast(brightness)
+                    changeSlot()
                 if curseur == 3:
                     #os detection
                     Osdetection()
